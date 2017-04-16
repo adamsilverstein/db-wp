@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "colors": "^1.1.2",
+    "file-system": "^2.2.2",
+    "node-dir": "^0.1.16",
+    "scan-folder": "^1.0.0",
+    "sloc": "^0.2.0",
+    "underscore": "^1.8.3"
+  }
+}
