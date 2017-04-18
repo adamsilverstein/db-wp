@@ -149,7 +149,6 @@ _.each( db.wordpressVersions, function( wp ){
 		totalJS += stats.source;
 
 	} );
-	//	console.log( totalJS );
 
 	versionData[ wp.version ]['stats']['jsFiles']     = _.pluck( jsFiles, 'filename' );
 	versionData[ wp.version ]['stats']['jsFileCount'] = jsFileCount;
@@ -185,8 +184,6 @@ _.each( db.wordpressVersions, function( wp ){
 	}
 	markup += '</section>'
 
-
-	//console.log( wp.version.green, 'JS Files:'.red + versionData[ wp.version ] );
 } );
 markup += '</div><script src="js/reveal.js"></script><script>Reveal.initialize();</script></body></html>';
 fs.writeFile( './jsdata.json', JSON.stringify( allData, null, 4 ) );
