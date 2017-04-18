@@ -117,6 +117,8 @@ const scanCodebase = function( codeRoot, wpVersion ) {
 let versionsRoot = '/Users/adamsilverstein/Sites/wordpresses/';
 let versionData = [];
 
+console.log( 'Starting'.green );
+
 // Go thru each version.
 _.each( db.wordpressVersions, function( wp ) {
 
@@ -127,7 +129,7 @@ _.each( db.wordpressVersions, function( wp ) {
 	}
 } );
 
-//console.log( versionData );
+console.log( 'Processing'.yellow );
 var processedData = [];
 // Process the versions, building stats.
 _.each( db.wordpressVersions, function( wp ){
@@ -149,7 +151,7 @@ _.each( db.wordpressVersions, function( wp ){
 	} );
 	//	console.log( totalJS );
 
-	versionData[ wp.version ]['stats']['jsFiles']     = _.pluck( jsFiles, 'relative' );
+	versionData[ wp.version ]['stats']['jsFiles']     = _.pluck( jsFiles, 'filename' );
 	versionData[ wp.version ]['stats']['jsFileCount'] = jsFileCount;
 	versionData[ wp.version ]['stats']['totalJS']     = totalJS;
 	versionData[ wp.version ]['stats']['external']    = versionData[ wp.version ].fileData.files.external;
@@ -168,38 +170,20 @@ _.each( db.wordpressVersions, function( wp ){
 } );
 
 allData = [];
+console.log( 'Writing markup'.yellow );
 
 var markup = '<html><head><link rel="stylesheet" href="css/reveal.css"><link rel="stylesheet" href="css/theme/white.css"></head><body><div class="reveal"><div class="slides">';
 
 _.each( db.wordpressVersions, function( wp ){
 
-	var dataForDisplay = {
-		'Version': wp.version,
-		'Released': wp.released,
-		'JS Code lines': versionData[ wp.version ]['stats']['totalJS']
-	};
-
+	markup += '<section>';
+	markup += '<h3>Version ' + wp.version +' ' +  wp.released +' '+ '</h3>';
+	markup += '<h4>' + '' + versionData[ wp.version ]['stats']['totalJS'] + ' lines of JavaScript</h4>';
 	if ( ! _.isUndefined( versionData[ wp.version ]['stats']['newJs'] ) && ! _.isEmpty( versionData[ wp.version ]['stats']['newJs'] ) ) {
-		dataForDisplay[ 'New JS Files' ] = versionData[ wp.version ]['stats']['newJs'];
+		markup += '<p>' + '<i>' + versionData[ wp.version ]['stats']['newJs'].join( ', ' ) + '</i></p>';
+
 	}
-
-	if ( ! _.isUndefined( versionData[ wp.version ]['stats']['external'] ) && ! _.isEmpty( versionData[ wp.version ]['stats']['external'] ) ) {
-		dataForDisplay[ 'New Externals' ] = versionData[ wp.version ]['stats']['external'];
-	}
-
-	allData.push( dataForDisplay );
-
-	console.log(
-		util.inspect(
-			dataForDisplay,
-			{
-				depth: null,
-				colors: true
-			}
-		)
-	);
-
-	markup += "";
+	markup += '</section>'
 
 
 	//console.log( wp.version.green, 'JS Files:'.red + versionData[ wp.version ] );
@@ -207,3 +191,4 @@ _.each( db.wordpressVersions, function( wp ){
 markup += '</div><script src="js/reveal.js"></script><script>Reveal.initialize();</script></body></html>';
 fs.writeFile( './jsdata.json', JSON.stringify( allData, null, 4 ) );
 fs.writeFile( './slides.html', markup );
+console.log( 'Done.'.green );
