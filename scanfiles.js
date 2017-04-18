@@ -11,7 +11,8 @@ var currentFolder = '';
 const scanCodebase = function( codeRoot, wpVersion ) {
 //	console.log( 'Scanning '.green + codeRoot.yellow + wpVersion.yellow );
 	let toReturn = [],
-		progress = '';
+		progress = '',
+		hasExternal = [];
 
 	toReturn['files'] = [];
 	// Find js files in current dir.
@@ -28,14 +29,70 @@ const scanCodebase = function( codeRoot, wpVersion ) {
 
 				// What is the file extension?
 				var splitname = filename.split( '.' )
-					extension = splitname.pop();
+					extension = splitname.pop(),
+					preExtension = splitname.pop();
 
-				toReturn['files'][ extension ] = toReturn['files'][ extension ] || [];
-				toReturn['files'][ extension ].push( {
-					'filepath': filepath,
-					'relative': relative,
-					'filename': filename
+				if ( 'min' === preExtension || 'dev' === preExtension ) {
+					return;
+				}
+
+				// Exclude themes
+				if ( 0 === relative.indexOf( 'wp-content/themes/' ) ) {
+					return;
+				}
+
+				// Externals libraries.
+				var externals = [
+					{
+						'name': 'TinyMCE',
+						'path': 'wp-includes/js/tinymce'
+					},
+					{
+						'name': 'PLUpload',
+						'path': 'wp-includes/js/plupload'
+					},
+					{
+						'name': 'Scriptaculous',
+						'path': 'wp-includes/js/scriptaculous'
+					},
+					{
+						'name': 'Codepress',
+						'path': 'wp-includes/js/codepress'
+					},
+					{
+						'name': 'SWFUpload',
+						'path': 'wp-includes/js/swfupload'
+					},
+					{
+						'name': 'JCrop',
+						'path': 'wp-includes/js/jcrop'
+					},
+					{
+						'name': 'jQuery',
+						'path': 'wp-includes/js/jquery'
+					}
+				];
+
+				var skipExternal = false;
+				_.each( externals, function( external ) {
+					if ( 0 === relative.indexOf( external.path ) ) {
+
+						// This is an external library, only add it once.
+						if ( _.isUndefined( hasExternal[ external.path ] ) ) {
+							hasExternal[ external.path ] = true;
+							relative  = external.name;
+							extension = 'external';
+							return;
+						} else {
+							skipExternal = true;
+						}
+					}
+
 				} );
+
+				if ( skipExternal ) {
+					return;
+				}
 				//console.log( 'adding ', extension, filename, toReturn['files'][ extension ] );
 			}
 		}
