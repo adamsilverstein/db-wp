@@ -5,7 +5,7 @@ var scanFolder = require( 'scan-folder' );
 var db         = require( './data/db-in.js')
 var fs         = require( 'file-system' );
 var sloc       = require( 'sloc' );
-
+const util     = require( 'util' );
 var currentFolder = '';
 
 const scanCodebase = function( codeRoot, wpVersion ) {
