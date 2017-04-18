@@ -93,6 +93,19 @@ const scanCodebase = function( codeRoot, wpVersion ) {
 				if ( skipExternal ) {
 					return;
 				}
+
+
+				toReturn['files'][ extension ] = toReturn['files'][ extension ] || [];
+
+				if ( 'external' === extension ) {
+					toReturn['files'][ extension ].push( relative );
+				} else {
+					toReturn['files'][ extension ].push( {
+						'filepath': filepath,
+						'relative': relative,
+						'filename': filename
+					} );
+				}
 				//console.log( 'adding ', extension, filename, toReturn['files'][ extension ] );
 			}
 		}
@@ -139,9 +152,58 @@ _.each( db.wordpressVersions, function( wp ){
 	versionData[ wp.version ]['stats']['jsFiles']     = _.pluck( jsFiles, 'relative' );
 	versionData[ wp.version ]['stats']['jsFileCount'] = jsFileCount;
 	versionData[ wp.version ]['stats']['totalJS']     = totalJS;
+	versionData[ wp.version ]['stats']['external']    = versionData[ wp.version ].fileData.files.external;
 
 } );
+
+var currentJS        = [];
+var currentExternals = [];
+_.each( db.wordpressVersions, function( wp ){
+	var newJS       = _.difference( versionData[ wp.version ]['stats']['jsFiles'], currentJS );
+	var newExternal = _.difference( versionData[ wp.version ]['stats']['external'], currentExternals );
+	currentJS        = versionData[ wp.version ]['stats']['jsFiles'];
+	currentExternals = versionData[ wp.version ]['stats']['external'];
+	versionData[ wp.version ]['stats']['newJs']    = newJS;
+	versionData[ wp.version ]['stats']['external'] = newExternal;
+} );
+
+allData = [];
+
+var markup = '<html><head><link rel="stylesheet" href="css/reveal.css"><link rel="stylesheet" href="css/theme/white.css"></head><body><div class="reveal"><div class="slides">';
 
 _.each( db.wordpressVersions, function( wp ){
-	console.log( wp.version.green, 'JS Files:'.red + versionData[ wp.version ]['stats']['totalJS'].blue )
+
+	var dataForDisplay = {
+		'Version': wp.version,
+		'Released': wp.released,
+		'JS Code lines': versionData[ wp.version ]['stats']['totalJS']
+	};
+
+	if ( ! _.isUndefined( versionData[ wp.version ]['stats']['newJs'] ) && ! _.isEmpty( versionData[ wp.version ]['stats']['newJs'] ) ) {
+		dataForDisplay[ 'New JS Files' ] = versionData[ wp.version ]['stats']['newJs'];
+	}
+
+	if ( ! _.isUndefined( versionData[ wp.version ]['stats']['external'] ) && ! _.isEmpty( versionData[ wp.version ]['stats']['external'] ) ) {
+		dataForDisplay[ 'New Externals' ] = versionData[ wp.version ]['stats']['external'];
+	}
+
+	allData.push( dataForDisplay );
+
+	console.log(
+		util.inspect(
+			dataForDisplay,
+			{
+				depth: null,
+				colors: true
+			}
+		)
+	);
+
+	markup += "";
+
+
+	//console.log( wp.version.green, 'JS Files:'.red + versionData[ wp.version ] );
 } );
+markup += '</div><script src="js/reveal.js"></script><script>Reveal.initialize();</script></body></html>';
+fs.writeFile( './jsdata.json', JSON.stringify( allData, null, 4 ) );
+fs.writeFile( './slides.html', markup );
