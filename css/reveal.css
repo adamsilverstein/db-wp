@@ -1363,3 +1363,14 @@ body {
 
 .zoomed .reveal .roll span:after {
   visibility: hidden; }
+
+.reveal section h3 {
+	color: #BF2A70;
+}
+.reveal section h4 {
+	color: #4D2865;
+}
+.reveal section p {
+
+	color: #11768C;
+}

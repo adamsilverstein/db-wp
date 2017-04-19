@@ -152,7 +152,7 @@ _.each( db.wordpressVersions, function( wp ){
 
 	versionData[ wp.version ]['stats']['jsFiles']     = _.pluck( jsFiles, 'filename' );
 	versionData[ wp.version ]['stats']['jsFileCount'] = jsFileCount;
-	versionData[ wp.version ]['stats']['totalJS']     = totalJS;
+	versionData[ wp.version ]['stats']['totalJS']     = totalJS.toLocaleString();
 	versionData[ wp.version ]['stats']['external']    = versionData[ wp.version ].fileData.files.external;
 
 } );
@@ -182,10 +182,14 @@ _.each( db.wordpressVersions, function( wp ){
 		markup += '<p>' + '<i>' + versionData[ wp.version ]['stats']['newJs'].join( ', ' ) + '</i></p>';
 
 	}
+	if ( ! _.isUndefined( versionData[ wp.version ]['stats']['external'] ) && ! _.isEmpty( versionData[ wp.version ]['stats']['external'] ) ) {
+		markup += '<p><strong>' + '<i>' + versionData[ wp.version ]['stats']['external'].join( ', ' ) + '</i></strong></p>';
+
+	}
 	markup += '</section>'
 
 } );
-markup += '</div><script src="js/reveal.js"></script><script>Reveal.initialize();</script></body></html>';
+markup += '</div><script src="js/reveal.js"></script><script>Reveal.initialize( { history: true } );</script></body></html>';
 fs.writeFile( './jsdata.json', JSON.stringify( allData, null, 4 ) );
 fs.writeFile( './slides.html', markup );
 console.log( 'Done.'.green );
