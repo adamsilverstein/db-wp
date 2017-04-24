@@ -129,8 +129,22 @@ _.each( db.wordpressVersions, function( wp ) {
 	}
 } );
 
+/**
+ * Determine if a block of code uses Backbone.
+ *
+ * @param  string code The code block to scan.
+ *
+ * @return bool        Whether the code uses backbone.
+ */
+const usesBackbone = function( code ) {
+
+	return ( code.indexOf( 'Backbone' ) >= 0 );
+}
+
 console.log( 'Processing'.yellow );
 var processedData = [];
+var trackedFiles = [];
+
 // Process the versions, building stats.
 _.each( db.wordpressVersions, function( wp ){
 
@@ -145,8 +159,13 @@ _.each( db.wordpressVersions, function( wp ){
 		var code  = fs.readFileSync( jsFile.filepath, 'utf8' ),
 			stats = sloc( code, 'js' );
 
+		// @todo hasBackbone?
+
 		jsFile.source = stats.source;
 		totalJS += stats.source;
+		trackedFiles[ jsFile.filename ] = {
+			'usesBackbone': usesBackbone( code )
+		};
 
 	} );
 
@@ -161,11 +180,29 @@ var currentJS        = [];
 var currentExternals = [];
 _.each( db.wordpressVersions, function( wp ){
 	var newJS       = _.difference( versionData[ wp.version ]['stats']['jsFiles'], currentJS );
+	var jsWithBackbone = _.filter( currentJS, function( jsFile ) {
+		return trackedFiles[ jsFile ].usesBackbone;
+	} );
+	var jsWithoutBackbone = _.filter( currentJS, function( jsFile ) {
+		return ! trackedFiles[ jsFile ].usesBackbone;
+	} );
+	var newJsWithBackbone = _.filter( newJS, function( jsFile ) {
+		return trackedFiles[ jsFile ].usesBackbone;
+	} );
+	var newJsWithoutBackbone = _.filter( newJS, function( jsFile ) {
+		return ! trackedFiles[ jsFile ].usesBackbone;
+	} );
 	var newExternal = _.difference( versionData[ wp.version ]['stats']['external'], currentExternals );
 	currentJS        = versionData[ wp.version ]['stats']['jsFiles'];
 	currentExternals = versionData[ wp.version ]['stats']['external'];
-	versionData[ wp.version ]['stats']['newJs']    = newJS;
-	versionData[ wp.version ]['stats']['external'] = newExternal;
+
+	versionData[ wp.version ]['stats']['currentJS']            = currentJS;
+	versionData[ wp.version ]['stats']['newJs']                = newJS;
+	versionData[ wp.version ]['stats']['jsWithBackbone']       = jsWithBackbone;
+	versionData[ wp.version ]['stats']['jsWithoutBackbone']    = jsWithoutBackbone;
+	versionData[ wp.version ]['stats']['newJsWithBackbone']    = newJsWithBackbone;
+	versionData[ wp.version ]['stats']['newJsWithoutBackbone'] = newJsWithoutBackbone;
+	versionData[ wp.version ]['stats']['external']             = newExternal;
 } );
 
 allData = [];
@@ -174,16 +211,40 @@ console.log( 'Writing markup'.yellow );
 var markup = '<html><head><link rel="stylesheet" href="css/reveal.css"><link rel="stylesheet" href="css/theme/white.css"></head><body><div class="reveal"><div class="slides">';
 
 _.each( db.wordpressVersions, function( wp ){
+	let backboneFiles = '';
+	if (
+		! _.isUndefined( versionData[ wp.version ]['stats']['currentJS'] ) &&
+		! _.isEmpty( versionData[ wp.version ]['stats']['currentJS'] )
+	) {
+		backboneFiles = ' ' + versionData[ wp.version ]['stats']['jsWithBackbone'].length + ' using Backbone';
+	}
 
 	markup += '<section>';
 	markup += '<h3>Version ' + wp.version +' ' +  wp.released +' '+ '</h3>';
-	markup += '<h4>' + '' + versionData[ wp.version ]['stats']['totalJS'] + ' lines of JavaScript</h4>';
-	if ( ! _.isUndefined( versionData[ wp.version ]['stats']['newJs'] ) && ! _.isEmpty( versionData[ wp.version ]['stats']['newJs'] ) ) {
-		markup += '<p>' + '<i>' + versionData[ wp.version ]['stats']['newJs'].join( ', ' ) + '</i></p>';
+	markup += '<h4>' + '' + versionData[ wp.version ]['stats']['totalJS'] + ' lines of JavaScript</h4><p class="jsheader">' + versionData[ wp.version ]['stats']['currentJS'].length + ' total JS files' + backboneFiles + '</p>' ;
+
+	// Show the new JS files.
+	if (
+		! _.isUndefined( versionData[ wp.version ]['stats']['newJsWithoutBackbone'] ) &&
+		! _.isEmpty( versionData[ wp.version ]['stats']['newJsWithoutBackbone'] )
+	) {
+		markup += '<p class="newjs"><span class="jsheader">' + versionData[ wp.version ]['stats']['newJsWithoutBackbone'].length + ' new JavaScript file(s):</span> <strong><i>' + versionData[ wp.version ]['stats']['newJsWithoutBackbone'].join( ', ' ) + '.</i></strong></p>';
 
 	}
-	if ( ! _.isUndefined( versionData[ wp.version ]['stats']['external'] ) && ! _.isEmpty( versionData[ wp.version ]['stats']['external'] ) ) {
-		markup += '<p><strong>' + '<i>' + versionData[ wp.version ]['stats']['external'].join( ', ' ) + '</i></strong></p>';
+
+	// Show the new Backbone using JS files.
+	if (
+		! _.isUndefined( versionData[ wp.version ]['stats']['newJsWithBackbone'] ) &&
+		! _.isEmpty( versionData[ wp.version ]['stats']['newJsWithBackbone'] )
+	) {
+		markup += '<p class="newjs"><span class="jsheader">' + versionData[ wp.version ]['stats']['newJsWithBackbone'].length + ' Backbone based file(s) added:</span> <strong><i>' + versionData[ wp.version ]['stats']['newJsWithBackbone'].join( ', ' ) + '.</i></strong></p>';
+	}
+
+
+	// Show the new external files.
+	if (
+		! _.isUndefined( versionData[ wp.version ]['stats']['external'] ) && ! _.isEmpty( versionData[ wp.version ]['stats']['external'] ) ) {
+		markup += '<p><span class="jsheader">External(s) added:</span> <strong>' + '<i>' + versionData[ wp.version ]['stats']['external'].join( ', ' ) + '</i></strong></p>';
 
 	}
 	markup += '</section>'
