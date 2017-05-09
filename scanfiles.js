@@ -70,6 +70,10 @@ const scanCodebase = function( codeRoot, wpVersion ) {
 					{
 						'name': 'jQuery',
 						'path': 'wp-includes/js/jquery'
+					},
+					{
+						'name': 'Prototype',
+						'path': 'wp-includes/js/prototype'
 					}
 				];
 
