@@ -153,5 +153,10 @@ module.exports.wordpressVersions = [
 		'released': 'December, 2016',
 		'version':  '4.7',
 		'folder':   '47'
+	},
+	{
+		'released': 'June, 2017',
+		'version':  '4.8',
+		'folder':   '48'
 	}
 ];
