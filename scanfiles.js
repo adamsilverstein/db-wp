@@ -99,7 +99,11 @@ const scanCodebase = function( codeRoot, wpVersion ) {
 				}
 
 
-				toReturn['files'][ extension ] = toReturn['files'][ extension ] || [];
+				toReturn['files'][ extension ] = _.isArray( toReturn['files'][ extension ] ) ? toReturn['files'][ extension ] : [];
+
+				if ( 'map' === extension ) {
+					return;
+				}
 
 				if ( 'external' === extension ) {
 					toReturn['files'][ extension ].push( relative );
@@ -131,6 +135,7 @@ _.each( db.wordpressVersions, function( wp ) {
 		'wordPressData': wp,
 		'fileData':      scanCodebase( versionsRoot,  wp.folder )
 	}
+
 } );
 
 /**
