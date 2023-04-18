@@ -5,6 +5,6 @@
     "node-dir": "^0.1.16",
     "scan-folder": "^1.0.0",
     "sloc": "^0.2.0",
-    "underscore": "^1.8.3"
+    "underscore": "^1.12.1"
   }
 }
